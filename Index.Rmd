@@ -581,3 +581,4 @@ https://lindeloev.github.io/tests-as-linear/
 
 When to use regression Analysis (Statistics by Jim): https://statisticsbyjim.com/regression/when-use-regression-analysis/
 
+UCLA Data Analysis Examples: https://stats.idre.ucla.edu/other/dae/
