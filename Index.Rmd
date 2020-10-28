@@ -25,6 +25,7 @@ predict_data2<-expand.grid(Years=c(8,10,12,14),Hipp=c(5000,5500,6000,6500,7000))
 predict_data_stupid<-data.frame(Years=5000,Hipp=10)
 
 tutorial_options(exercise.timelimit = 10)
+options(tibble.width = Inf)
 FootballBrain<-Lock5Data::FootballBrain
 
 
@@ -55,13 +56,13 @@ Data from 75 individuals is available, a mixture of football players with known 
 ```{r,echo=FALSE}
 data.frame(Variable=colnames(FootballBrain),
            Explanation=c("Group (explained above)","Total hippocampus volume, in microL",
-                         "Left hippocampus volume, in microL","	Number of years playing football","Cognitive testing composite reaction time score, given as a percentile")) %>% kable()
+                         "Left hippocampus volume, in microL","	Number of years playing football","Cognitive testing composite reaction time score, given as a percentile. This is not available for all respondents.")) %>% kable()
 ```
 
 You can explore this data a little below:
 
 
-```{r,eacho=FALSE}
+```{r,echo=FALSE}
 DT::datatable(FootballBrain)
 ```
 
@@ -72,7 +73,7 @@ Singh R, Meier T, Kuplicki R, Savitz J, et al., "Relationship of Collegiate Foot
 
 ### Exploring the Data
 
-Let's first of all investigate our data, to take a look at the relationship between hippocampus volume and number of years playing football. Both of these are numeric variables so we can use a point geometry within ggplot2.
+Let's first of all investigate our data, to take a look at the relationship between hippocampus volume and number of years playing football. Both of these are numeric variables so we can use a point geometry within `ggplot2`.
 
 
 ```{r ggplot1,exercise=TRUE}
@@ -107,19 +108,21 @@ FootballBrain %>%
 
 ```
 
-This now gives a clear summary of how the mean hippocampus volume is decreasing with the increase in number of years of playing football.
+This now gives a clear numeric summary of how the mean hippocampus volume is decreasing with the increase in number of years of playing football.
 
 ### Correlation
 
 
-A simple way of summarising this relationship, that you probably learnt in school, could be through calculating the correlation coefficient. This has a nice easy function in R called cor(). This requires the names of two columns of numeric data to determine the correlation coefficient.
+A simple way of summarising this relationship, that you probably learnt in school, could be through calculating the correlation coefficient. This has a function in R called `cor()`. This requires the names of two columns of numeric data to determine the correlation coefficient.
 
 ```{r cor0,exercise=TRUE}
 cor(FootballBrain$Hipp,FootballBrain$Years)
 ```
 
 The correlation is pretty strong, -0.69, - as we might expect from looking at the plot. It is negative, because hippocampus volume is decreasing with an increase in years. 
-But correlation coefficent is a very limited type of analysis - we can learn much more through using a modeling approach.
+But correlation coefficient is a very limited type of analysis - we can learn much more through using a modeling approach.
+
+### Fitting a line to the plot
 
 You probably learnt at school about the idea of 'putting a line through' your points when you see a scatter point like this. We have already learnt about `geom_smooth`, but as discussed previously it defaults to a moving average type model. However we can change the `method` argument to fit a simple straight line instead. Looking at the plot, a straight line does like a reasonable choice for modelling this data.
 
@@ -132,34 +135,39 @@ By default we see a 95% confidence interval shaded around the trend line.
 
 ### Fitting the Model
 
-To examine what we actually have in our model, we need to fit the model ourself. We do this using the lm() command. The syntax for this is very similar to what we saw in the previous module for t-tests, with a response variable, a tilde, then the explanatory variable. Like with the t.test function the data argument comes second, after the formula. 
+To examine what we actually have in our model, we need to fit the model ourself. We do this using the `lm()` command. The syntax for this is very similar to what we saw in the previous module for t-tests, with a response variable, a tilde, then the explanatory variable. 
+Like with the `t.test` function the data argument comes second, after the formula. So if we were to use a pipe from data into `lm()` we would need to specify `data=.` within the `lm` function.
 
 ```{r mdo1,exercise=TRUE}
 lm(Hipp~Years,data=FootballBrain)
 ```
 
-The output by default only tells us two things:
+The output here only tells us two things:
 "Call" - simply repeating back the model we have specified
 "Coefficients": Telling us the values of the parameters
 
-A linear regression follows the equation of a straight line y = B0 + B1x (you may have learnt this as y=a+bx or y=mx+c ; depending on where and when you were about 12 years old)
-The coefficients give us the value of our intercept: 7599 and the value of our slope: -130 So the overall model would be:
+A linear regression follows the equation of a straight line y = B0 + B1x. You may have learnt this same equation as y=a+bx or y=mx+c ; depending on where and when you were about 12 years old.
 
-Hippocampus Volume (microL)  = 7599  - 130*Years playing football
+The coefficients give us the value of our intercept (B0): 7599 and the value of our slope (B1): -130.
 
-The value of the intercept is interpreted as the expected value of the response variable, where all explanatory variables are equal to zero. So for someone with no years of football, we would expect to see a hippocampus volume of 5799 microL.
+So the overall model would be:
 
-The value of the slope represents the change we expect to see in the response variable for a one unit increase in the explanatory variable. So for every year of increased football playing, we expect a reduction of the hippocampus volume of 130 microL
+Hippocampus Volume (microL)  = 7599  - 130 * Years playing football
 
+The value of the intercept is interpreted as the expected value of the response variable, where all explanatory variables are equal to zero. So for someone with no years of football playing, we would expect to see a hippocampus volume of 7599 microL.
 
-However we can get much more information from our model than this! But first we need to save the model to an object:
+The value of the slope represents the change we expect to see in the response variable for a one unit increase in the explanatory variable. So for every year of increased football playing, we expect a reduction in the average hippocampus volume of 130 microL.
+
+However we can get much more information from our model than this! R is a little different from many other software packages, which will produce a lot of different outputs when you create a model. In R you have to ask specifically for what you want out of a model.
+
+But first we usually need to save the model to an object. I am choosing to give it the name `linreg_mod`.
 
 ```{r mod_obj,exercise=TRUE}
 linreg_mod<-lm(Hipp~Years,data=FootballBrain)
 
 ```
 
-As ever, when creating an object we dont see any immediate output. But we now have the ability to use lots of functions that give us different pieces of output and inference from this model. R is a little different from many other software packages, which will produce a lot of different outputs when you create a model. In R you have to ask specifically for what you want out of a model.
+As ever, when creating an object we don't see any immediate output. But we now have the ability to use lots of functions that give us different pieces of output and inference from this model. 
 
 ### Summarising the model
 
@@ -167,9 +175,9 @@ As ever, when creating an object we dont see any immediate output. But we now ha
 summary(linreg_mod)
 ```
 
-`summary(model)` provides us with a lot of useful information - model fit statistics (R squared values & F statistic), standard errors and p-values for the coefficients.
+`summary()` provides us with a lot of useful information in a customised output format containing model fit statistics, standard errors and p-values for the coefficients.
 
-The `broom` library also provides the functions `glance` and `tidy`. This extracts similar information to `summary` but returns it in the form of data frames. This can be very useful if we want to export results from this model into other analyses or to make the output look nice in our reports. 
+The `broom` library also provides the functions `glance` and `tidy`. This extracts very similar information to `summary` but returns it in the form of data frames. This can be very useful if we want to export results from this model into other analyses or to make the output look nice in our reports. 
 
 ```{r glance0,exercise=TRUE}
 glance(linreg_mod)
@@ -183,9 +191,9 @@ In general - `summary` is useful if all you want to do is look at the model outp
 
 Overall the information tells us that the relationship between the Years playing football and hippocampus volume is highly significant. p=1.05e-11. i.e. p=0.00000000001.
 
-The intercept is also significant. But this is almost certainly not of interest. The null hypothesis which generates this p-value is that the intercept is equal to 0. In this case that would mean that for someone who had never played football the hippocampus volume is zero (i.e. they literally have no brain). It is not really suprising to see very strong evidence against this nonsensical null hypothesis! 
+The intercept is also significant. But this is almost certainly not of interest. The null hypothesis which generates this p-value is that the intercept is equal to 0. In n other words the null hypothesis is that someone who had never played football would literally have no brain, or at least a brain with 0 hippocampus volume. It is not really surprising to see very strong evidence against this nonsensical null hypothesis! 
 
-We can also see that 47% of the variability in hippocampus volume can be explained by the linear increase in number of years playing football (R- Squared). You can read a little bit about some of the various model fit statistics, and what they are used for here.
+We can also see that 47% of the variability in hippocampus volume can be explained by the linear increase in number of years playing football (R- Squared). You can read a little bit about r-squared, and why the adjusted r-squared is also a useful metric to consider [here](https://thestatsgeek.com/2013/10/28/r-squared-and-adjusted-r-squared/).
 
 We have actually seen this 47% number before (sort of). Look at the square root of this number:
 
@@ -214,7 +222,7 @@ So that we can see that our 95% confidence interval around the average decrease 
 ### Checking Model
 
 We should also check our model fit plots to assess model validity.
-```autoplot(model)``` from the ggfortify package produces 4 model checking plots. 
+```autoplot(model)``` from the `ggfortify` package produces 4 model checking plots. 
 
 ```{r check_res,exercise=TRUE}
 autoplot(linreg_mod)
@@ -235,6 +243,8 @@ Remove outliers and conduct sensitivity analysis. This will help us understand t
 Transform variables. Different transformations may help improve a model non-linear relationships, or heterogeneity, or the normality assumptions.
 With severe violations of normality or heterogeneity we may consider using a generalised linear model, making a different distributional assumption about our residuals. or transforming our variable.
 
+There is also a base-R function to make these plots, simply `plot`, which you may see used a lot if you follow other tutorials. But `autoplot` produces much nicer looking, `ggplot2` compatible output plots.
+
 ### Making predictions
 
 Remember in our original data we had nobody who had between 1 and 6 years of football experience. If we are happy with our model validity then we can also make predictions about what we would expect the average hippocampus volume to be for footballers with that level of experience.
@@ -247,7 +257,7 @@ predict_data
 ```
 
 
-We can either use the function `predict` or `augment`. `predict` is the standard function from base-R, which will return just the predicted values. But i prefer the `augment` function from the `broom` library which adds the predictions into the existing data frame. You can see the difference below.
+We can either use the function `predict` or `augment`. `predict` is the standard function from base-R, which will return just the predicted values. But I prefer the `augment` function from the `broom` library which adds the predictions into the existing data frame. You can see the difference in the output below, but the syntax within these two functions is identical - the name of the model, followed by a `newdata=` argument for the name of the data frame we want to predict over.
 
 ```{r aug_pred,exercise=TRUE}
 
@@ -259,7 +269,7 @@ predict(linreg_mod,newdata=predict_data)
 
 ```
 
-You can see the fitted values are the same from both functions, but the output from `augment` returns the predictions in a more useable format. For example we might want to add these onto the plot we made earlier. 
+You can see the fitted values are the same from both functions, but the output from `augment` returns the predictions in a more usable format, and also provides standard errors. For example we might want to add these onto the plot we made earlier. 
 
 ```{r pred_plot,exercise=TRUE}
 predict_data<-augment(linreg_mod,newdata=predict_data)
@@ -270,20 +280,23 @@ ggplot(data=FootballBrain,aes(y=Hipp,x=Years))+
       
 ```
 
-This is not really a modelling point, since drawing the line with `geom_smooth` is a better way of showing the same information. But it is useful to know that in ggplot, you can set custom data sets to be used within each geometry! You are able to specify a different set of data and aesthetics within any geometry, as long as you also include the argument `inherit.aes=FALSE`.
+This particular plot is maybe not that useful, since drawing the line with `geom_smooth` is a better way of showing the same information. 
 
+But I think it is useful to know that in ggplot, you can set different data sets to be used within each `geom`. This is something we have not seen before!
+You are able to specify different data and/or aesthetics to be used within any geometry, as long as you also include the argument `inherit.aes=FALSE`.
 
 ## Multiple linear regression
 
-I am now going to change my question slightly, and look at the `Cogniton` variable, related to brain function rather than brain size. A value of 100 here indicates a respondent was in the top percentile for reaction times, so the higher the value the better the brain function. Note that this variable is only collected for the football players, it is not collected (and NA in the data) for those with 0 years of playing football. 
+But what about the rest of our data? In particular what about the `Cogniton` variable, the brain function rather than the brain size. A value of 100 here indicates a respondent was in the top percentile for reaction times. The higher the value the better the brain function. 
+Note that this variable is only collected for some of the football players, for others it is not collected and for non-football players it is not collected.
 
-I may be interested now in both whether there is a link between `Hipp` and `Cognition`, (does brain size affect brain function) but also about whether there is a link between `Years` and `Cognition` (does increased football playing affect brain function).
+I may be interested now in both whether there is a link between `Hipp` and `Cognition`, (does brain size affect brain function?) but also about whether there is a link between `Years` and `Cognition` (does increased football playing affect brain function?).
 
 ### Seperate Models?
 
 We could go through the process as before, with separate models for each of these two questions. As a recap - let's do some of these steps now.
 
-Below I have produced a plot, and fitted a model, showing how cognitive ability is related to number of years playing football.
+Below I have produced a plot, and fitted one of these separate model, showing how cognitive ability is related to number of years playing football.
 
 
 ```{r,echo=FALSE}
@@ -297,8 +310,8 @@ ggplot(data=FootballBrain,aes(y=Cogniton,x=Years))+
 cog_yr_model<-lm(Cogniton~Years,data=FootballBrain)
 summary(cog_yr_model)
 ```
-
-*Now it is your turn. Make a plot showing the relationship between Hippocampus size, `Hipp`, and Cognitive function, `Cogniton`. Add a linear trend line onto this plot*
+Now it is your turn!
+*Make a plot showing the relationship between Hippocampus size, `Hipp`, and Cognitive function, `Cogniton`. Add a linear trend line onto this plot*
 ```{r CogHip1,exercise=TRUE}
 
 ```
@@ -326,7 +339,7 @@ glance(cog_hip_model)
 
 ```
 
-From our results we can conclude that both hippocampus size and number of years playing football have a significant linear relationship with cognitive function. 
+From our results we can conclude that, when analysed through separate models, both hippocampus size and number of years playing football have a significant linear relationship with cognitive function. 
 
 ### Combined model
 
@@ -339,9 +352,15 @@ Luckily in R this is easy! We just add a `+` between the variables.
 multreg_mod<-lm(Cogniton~Years+Hipp,data=FootballBrain)
 summary(multreg_mod)
 ```
-The coefficients from a multiple regression model have a slightly different interpretation to in a single variable model. The coefficient for `Years`, -0.61, is now interpreted as the expected change in the outcome, `Cogniton`, for a one unit increase *when holding the value of `Hipp` constant*. We see that this effect is not statistically significant, p=0.619. This would suggest that years playing football does not have an effect upon the brain function, after controlling for hippocampus volume.
+The coefficients from a multiple regression model have a slightly different interpretation to in a single variable model. 
 
-But we can see an indirect effect through hippocampus volume. Increased football playing is associated with decreased brain volume; and decreased hippocampus volume is associated with cognitive function. Scientifically, this relationship pathway would also seem to make sense. 
+The coefficient for `Hipp`, 0.02, is now interpreted as the expected change in the outcome, `Cogniton`, for a one unit increase *when holding the value of `Years` constant*. We see that this effect is statistically significant, p=<0.001. This would suggest that brain size does have an effect upon the brain function, considering two individuals with the same number of years playing football.
+
+The coefficient for `Years`, -0.61, is now interpreted as the expected change in the outcome, `Cogniton`, for a one unit increase *when holding the value of `Hipp` constant*. We see that this effect is not statistically significant, p=0.619. This would suggest that years playing football does not have an effect upon the brain function, comparing two individuals with the same size hippocampus.
+
+This does not mean that the number of years playing football is not related to the brain function! Instead we see a pathway, through which number of years playing football is linked to brain size; and brain size is linked to brain function.
+
+Scientifically, this relationship pathway would also seem to make sense. 
 
 
 ### Interactions
@@ -354,11 +373,14 @@ We can fit an interaction between variables by using a `*` rather than a `+`.
 multreg_mod_interaction<-lm(Cogniton~Years*Hipp,data=FootballBrain)
 summary(multreg_mod_interaction)
 ```
-In this model we can now see that none of our model terms are statistically significant. However the overall model is highly significant, from the F-test at the bottom of the output, and the R square value is quite high. So why has this happened? It is likely we have run into an issue of over-fitting the model. 
+In this model we can now see that none of our individual model terms are statistically significant. 
+However the overall model is highly significant, from the F-test at the bottom of the output, and the R square value is quite high.
+
+So how exactly can this happen? It is likely we have run into an issue of over-fitting the model. It is likely that the inferences made from it will not generalise into a wider population, and would only be applicable to the specific data that we have collected.
+This can commonly happen when we have small datasets, lots of variables, or highly correlated explanatory variables. In this case we have two of those problems - a fairly small dataset and highly correlated explanatory variables. 
+When we have an over-fitted model this inflates the standard errors associated with each model coefficient, which can show the individual coefficients to be non-significant explanatory factors, despite the overall model explanatory nature of the model being deemed highly significant.
 
 ### Goodness-of-fit statistics
-
-This can commonly happen when we have small datasets, lots of variables, or highly correlated explanatory variables. In this case we have two of those problems - a fairly small dataset and highly correlated explanatory variables. When we have an over-fitted model it is likely that the inferences made from it will not generalise into a wider population, and would only be applicable to the specific data that we have collected. 
 
 We can see further evidence of this by looking more at the model-fit statistics we have seen previously from `glance()`. In particular the AIC (Akaike Information Criterion) and BIC (Bayesian Information Criterion). 
 
@@ -369,7 +391,7 @@ glance(multreg_mod_interaction)
 ```
 If we just wanted the AIC or BIC values, and no other output, there are the standalone functions `AIC()` and `BIC()`, which just need the name of the model as the input.
 
-When comparing models from the same data, we are looking for lower values of AIC and BIC, which will indicate a better model fit. From the output both the AIC and BIC are larger for the model containing the interaction variable than the model without the interaction, indicating the model without the interaction should be preferred. 
+When comparing models from the same data, we are looking for lower values of AIC and BIC, which will indicate a better model fit. From the output both the AIC and BIC are larger for the model containing the interaction variable than the model without the interaction. Since larger values are bad, this indicates the model without the interaction should be preferred. 
 
 You can read more about these goodness-of-fit statistics [here](https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781118856406.app5). 
 
@@ -386,30 +408,40 @@ No major issues within these plots to worry about. There are small deviations fr
 
 ### Making predictions
 
-We can also use `augment` to make predictions as before. This is particularly useful when considering the marginal effects of each variable, or in cases where we do have an interaction.
-The data we predict over has to contain all variables in the data. Remember that we could ask R for predictions about any value of `Years` or `Hipp`. No error will appear if we mistakenly ask for a prediction of someone who has been playing football for 5000 years, and has a hippocampus volume of 10 microL. Although the standard error of that prediction will be very large. 
+We can also use `augment` to make predictions as before. This is particularly useful to help consider how the explanatory variables work together, either with or without interaction effects.
 
-```{r stupidpred,example=TRUE}
+The data we predict over has to contain all variables in the data. 
+
+Remember that we could ask R for predictions about any value of `Years` or `Hipp`. No error will appear if we mistakenly ask for a prediction of someone who has been playing football for 5000 years, and has a hippocampus volume of 10 microL. Although the standard error of that prediction will be very large. 
+
+```{r stupidpred,exercise=TRUE}
 predict_data_stupid<-data.frame(Years=5000,Hipp=10)
 
 augment(multreg_mod,newdata=predict_data_stupid)
 
 ```
-Since the possible range of `Cogniton` is 0-100, having a predicted value of -3125 is obviously nonsense! So hopefully, as long as we were thinking about what we were doing, we would notice this mistake.
+Since the possible range of `Cogniton` is 0-100, having a predicted value of -3125 is obviously nonsense! Hopefully, as long as we were thinking about what we were doing, we would notice this mistake. Make sure you consider if the predictions are sensible - extrapolating outside the range of our data is always dangerous!
 
-Make sure you consider if the predictions are sensible - extrapolating outside the range of our data is always dangerous!
+The function `expand.grid` is a useful function to use when dealing with making predictions from multiple regression models, instead of `data.frame`.
+This will give us all combinations of the variables we provide. For example, in the chunk below we provide four different values for `Years` and five different values for `Hipp`. The resulting dataset will have 20 rows - one row for each combination.
 
-The function `expand.grid` is a useful function to use when dealing with multiple regression models. This will give us all combinations of the variables we provide. For example, in the chunk below we provide four different values for `Years` and five different values for `Hipp`. The resulting dataset will have 20 rows - one row for each combination.
 
+
+```{r preds,exercise=TRUE}
+predict_data2<-expand.grid(Years=c(8,10,12,14),Hipp=c(5000,5500,6000,6500,7000))
+
+
+```
 
 Once we have this dataset from `expand.grid()` we can use `augment()`in the same way we saw before. 
 
-```{r preds,example=TRUE}
-predict_data2<-expand.grid(Years=c(8,10,12,14),Hipp=c(5000,5500,6000,6500,7000))
+
+```{r aug5,exercise=TRUE}
 
 augment(multreg_mod,newdata=predict_data2)
-
 ```
+
+
 
 If we look into the data we can see that, comparing within the same hippocampus volume, there is only a small difference as we increase the number of years of football playing. But comparing within the same number of years we see a very large difference in the fitted values as we increase hippocampus volume.
 
@@ -424,7 +456,7 @@ augment(multreg_mod,newdata=predict_data2) %>%
   ggplot(aes(y=.fitted,x=Hipp,col=Years))+
     geom_line()
 ```
-Where we map a numeric variable to the `colour` aesthetic it does not, by default, create seperate lines for each value of that variable. There are two ways we can solve this - either by also including a `group` aesthetic, which will force a split for every unique value. Or by converting the variable into a factor variable. The only difference in the output of these approaches is the colour palette, which has different defaults for numeric variables than for categorical variables. 
+Where we map a numeric variable to the `colour` aesthetic it does not, by default, create separate lines for each value of that variable. There are two ways we can solve this - either by also including a `group` aesthetic, which will force a split for every unique value. Or by converting the variable into a factor variable. The only difference in the output of these approaches is the colour palette, which has different defaults for numeric variables than for categorical variables. 
 
 ```{r intplot2,exercise=TRUE}
 augment(multreg_mod,newdata=predict_data2) %>%
@@ -466,7 +498,7 @@ ggplot(data=FootballBrain,aes(y=Hipp,x=Group))+
 ```
 As expected from our previous analyses the control group clearly have larger hippocampus volumes than either of the other two groups. Comparing the concussion group with the non-concussion group of footballers, we also see that the average volume is lower among the concussion group. 
 
-We can also calculate summary statistics in a more straightforward way for grouped data, simply using group_by and summarise as we have done previously.
+We can also calculate summary statistics simply using `group_by` and `summarise` as we have done previously.
 
 **Calculate the mean, median and standard deviation of `Hipp` by `Group`**
 ```{r sumstats1,exercise=TRUE}
@@ -483,13 +515,13 @@ FootballBrain %>%
 ### Fitting the model
 
 
-Instead of "linear regression" the statistical method we might use here is often called "analysis of variance". However, mathematically and in terms of how R treats them, these are the same. The only difference being with "linear regression" our explanatory variable is numeric, and in "analysis of variance" our explanatory variable is a factor.
+Instead of "linear regression" the statistical method we might use here is often called "analysis of variance". However, mathematically and in terms of how R treats them, these are both just "linear models". The difference comes from the data: with "linear regression" our explanatory variable is numeric, and in "analysis of variance" our explanatory variable is a factor.
 
-Do be careful with the format of your data - particular if you are using codes for groups. I explain the potential problems that can arise here.
+Do be careful with the format of your data - particular if you are using codes for groups. I explain the potential problems that can arise [here](https://stats4sd.org/blog/22).
 
-So we can use the `lm`, `summary`, `glance`, `tidy`, `autoplot` functions exactly as we have seen before, should we so wish.
+So, because it is just a linear model, we can use the `lm`, `summary`, `glance`, `tidy`, `autoplot` functions exactly as we have seen before.
 
-```{r}
+```{r am1,exercise=TRUE}
 anova_mod<-lm(Hipp~Group,FootballBrain)
 
 summary(anova_mod)
@@ -502,7 +534,7 @@ autoplot(anova_mod)
 
 The output from `glance` and `autoplot` is interpreted in the same way as we have seen previously. Consider for yourself whether the residual plots suggest any problems with this model, and compare the AIC and BIC values back against the results from the linear regression model to see which would be considered a better fit for the data.
 
-The output from `summary` or `tidy` is a little different to intepret though. Even though we only have one variable, `Group`, we see two coefficients and two p-values for this variable. And, if we think of our group variable, we only see two of the three groups represented in the output. The control group appears to be missing.
+The output from `summary` or `tidy` is a little different to interpret though. Even though we only have one variable, `Group`, we see two coefficients and two p-values for this variable. And, if we think of our group variable, we only see two of the three groups represented in the output. The control group appears to be missing.
 
 When we have a categorical variable the intercept term represents the reference level of that variable. By default the reference level will be the first group alphabetically. In this case that is the `Control` group, which is probably a sensible choice to use as the reference level. But we could change the reference level by using the `relevel()` function within a call to `mutate()`.
 
@@ -526,7 +558,7 @@ anova(anova_mod)
 Unsurprisingly group has, overall, a highly significant effect.
 If you have learnt about analysis of variance tables before, you may know there are quite a few different methods of breaking down the overall variance and calculating p-values, sometimes known as "Type I", "Type II", "Type III". 
 
-By default R produces the Type I (Sequential) sum of squares. Many other statistical software packages default to Type III, so this is often a cause of confusion when comparing results between software. If you would like Types II or III, there is a function `Anova()` (capital A!) from the `car` library.
+By default R produces the Type I (Sequential) sum of squares. Many other statistical software packages default to Type III, so this is often a cause of confusion when comparing results. If you would like Types II or III, the easiest option is to use the function `Anova()` (capital A!) from the `car` library.
 
 You can read more about this [here](http://md.psych.bio.uni-goettingen.de/mv/unit/lm_cat/lm_cat_unbal_ss_explained.html).
 
