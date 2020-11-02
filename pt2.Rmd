@@ -373,6 +373,19 @@ anova_mod %>%
 This shows us that, as we have seen already, the control group has a significantly higher hippocampus volume than the two other groups. But it also shows us something new, that the concussion group has a significantly lower hippocampus volume than the non-concussion group.
 
 
+### What next?
+
+As explained in the video, one of the great things about modelling in R is that once you have mastered the basics you quickly realise how many different sorts of models you are able to interact with. A lot of the functions we have used in this module will be used in almost exactly the same way across a huge array of different statistical models. From generalised linear models, using `glm()`, into mixed effects or multilevel models, using `lmer()` from the `lme4` library and even into multivariate, machine learning or Bayesian modelling techniques. 
+
+The main issues are usually finding the right libraries and functions to use, and understanding the statistical theory to know if you are using an appropriate technique, and interpreting the results correctly.
+
+The first issue comes down to practice, trial and error and good Google skills (other search engines are also available.)
+Since anyone can put anything on the internet, there are a lot of bad resources out there! If you are looking for a good, much more comprehensive, guide to standard modelling techniques in R I can recommend "An R Companion to Applied Regression", which comes with plenty of code examples. https://socialsciences.mcmaster.ca/jfox/Books/Companion/downloads.html
+
+The Institute for Digital Research and Education at UCLA also host a lot of short guides to specific modelling techniques, not just for R but for other software as well, and these are generally well written and easy to follow: https://stats.idre.ucla.edu/other/dae/
+
+If you are struggling with the statistical theory, don't be afraid to ask a statistician for help! And always keep in mind the principle of parsimony - keep it simple! We very often do not need to over-complicate things with 'clever' modelling approaches if the simple ones look like they would provide robust conclusions. 
+
 
 ## References 
 
